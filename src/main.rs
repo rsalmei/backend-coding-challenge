@@ -5,7 +5,7 @@ use std::time::Duration;
 /// The interval at which to update the nodes connectivity data.
 const NODES_CONNECTIVITY_UPDATE_INTERVAL: Duration = Duration::from_secs(30);
 /// The Mempool Space API endpoint for fetching Lightning Network nodes connectivity data.
-const MP_NODES_CONNECTIVITY_API: &str =
+const NODES_CONNECTIVITY_API: &str =
     "https://mempool.space/api/v1/lightning/nodes/rankings/connectivity";
 
 #[tokio::main]
@@ -55,7 +55,7 @@ async fn update_nodes_connectivity() -> Result<()> {
 
 /// Fetches the connectivity data of Lightning Network nodes from the Mempool API.
 async fn fetch_nodes_connectivity() -> Result<Vec<NodeConnectivity>> {
-    reqwest::get(MP_NODES_CONNECTIVITY_API)
+    reqwest::get(NODES_CONNECTIVITY_API)
         .await?
         .json()
         .await
