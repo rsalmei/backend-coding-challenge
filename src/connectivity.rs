@@ -2,6 +2,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use surrealdb::Surreal;
 use surrealdb::engine::any::Any;
+use tracing::info;
 
 /// The Mempool Space API endpoint for fetching Lightning Network nodes connectivity data.
 const NODES_CONNECTIVITY_API: &str =
@@ -43,7 +44,7 @@ pub async fn update_nodes_connectivity_task(db: Surreal<Any>) -> Result<()> {
     // returned by the API; but I consider very important to store updated_at in the database for a
     // plethora of reasons, like debugging, data staleness checks, auditing, etc.
     let max_updated_at = nodes.iter().map(|node| node.updated_at).max().unwrap(); // SAFETY: nodes is not empty.
-    println!("fetched new nodes connectivity data, max_updated_at: {max_updated_at}");
+    info!("fetched new nodes connectivity data, max_updated_at: {max_updated_at}");
 
     // upsert each node's connectivity data into the database.
     // this is necessary because they are ranked by connectivity quality (number of open channels),
