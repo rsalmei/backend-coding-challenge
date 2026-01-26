@@ -16,15 +16,45 @@ pub struct FriendlyNodeConnectivity {
     pub first_seen: String,
 }
 
+/// Filter parameters for the GET /nodes endpoint.
+#[derive(Debug, Deserialize)]
+pub struct NodeConnectivityFilter {
+    min_capacity: Option<f64>, // in BTC, as returned by the API.
+}
+
 /// Handler for the GET /nodes endpoint.
 pub async fn get_nodes_connectivity_handler(
     State(db): State<Surreal<Any>>,
+    Query(filter): Query<NodeConnectivityFilter>,
 ) -> Result<Json<Vec<FriendlyNodeConnectivity>>, AppError> {
+    if let Some(min_capacity) = filter.min_capacity
+        && min_capacity < 0.0
+    {
+        return Err(AppError::ValueError(
+            "min_capacity must be non-negative".to_owned(),
+        ));
+    }
+
+    // prepare the SQL query based on the filter, while avoiding memory allocations.
+    let sql = match filter.min_capacity {
+        Some(_) => {
+            "SELECT * FROM (SELECT *, first_seen FROM ln_node_connectivity
+            WHERE capacity >= $min_capacity)"
+        }
+        None => "SELECT * FROM ln_node_connectivity",
+    };
     // fetch current nodes connectivity data from the database.
-    let nodes: Vec<NodeConnectivity> = db
-        .select("ln_node_connectivity")
+    let mut response = db
+        .query(sql)
+        .bind((
+            "min_capacity", // no problem binding vars that are not used in the query.
+            filter.min_capacity.map(|c| (c * 100_000_000.0) as u64),
+        ))
         .await
         .map_err(AppError::Database)?;
+
+    // extract the result from the first statement in the query.
+    let nodes: Vec<NodeConnectivity> = response.take(0).map_err(AppError::Database)?;
 
     // transform data for the response.
     let response = nodes
