@@ -1,6 +1,6 @@
-# Bipa Back-end Coding Challenge
+# Back-end Coding Challenge
 
-Hello! Thank you for taking the time to review my coding challenge submission for Bipa.
+Hello! Thank you for taking the time to review my coding challenge submission.
 
 It was a fun and interesting project that allowed me to explore new technologies and, hopefully, demonstrate my skills.
 
@@ -10,6 +10,16 @@ SurrealDB is overkill, of course. Even when embedded, it provides a multi-model 
 <br>For this project, I used its embedded mode with in-memory storage, which is perfect for testing and small applications. But you can easily switch to a persistent storage engine or even a distributed setup if wanted.
 
 Curiously, all the companies I've worked for so far have used Warp for Rust back-ends, so I thought it was time to try Axum myself, which I only hear good things about. I read a lot about it throughout the years, and I really like its design and philosophy. For instance, I love the magic handlers and extractors, and how ergonomic it seems to be, so I'll finally get to use it in a small project.
+
+## Unwrap usage policy
+
+Yes, I do use unwrap in production code, but very consciously. I even always comment why it's safe to do so like it was an unsafe block. This reassures code reviewers and future me that it's not an oversight but a deliberate choice, that has been thought through and is guaranteed to be safe. I do this for any functions that may panic, like unwraps, arrays indexing, Vec::swap_remove, etc.
+
+I consider panics to be embarrassing, so no software of mine will ever panic, at most they will gracefully shut down or degrade functionality.
+
+I also use unwraps a lot at compile time, like for LazyLock initializers with Regexes using fixed patterns, that must be correct or are a programming error that can only be fixed by the developer (me :-).
+
+But I wouldn't ever use any of those in runtime code, that depends on the environment or user input. It seems easy to discern between the two at first, but it requires a good deal of experience to always get it right.
 
 ## Build tools & versions used
 
@@ -35,7 +45,7 @@ surrealdb = { version = "2.4", default-features = false, features = ["kv-mem", "
 ```
 Then run the server with:
 ```bash
-SURREALDB="surrealkv://bipa-challenge.db" cargo run
+SURREALDB="surrealkv://file.db" cargo run
 ```
 
 ## What was the reason for your focus? What problems were you trying to solve?

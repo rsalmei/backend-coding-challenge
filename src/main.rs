@@ -32,9 +32,9 @@ async fn main() -> Result<()> {
 
     // spawn the node connectivity update task.
     tokio::spawn(utils::periodic_task(NODES_CONNECTIVITY_UPDATE_PERIOD, {
-        let db = db.clone(); // the surreal db handle is cheap to clone, just an Arc internally.
+        let db = db.clone();
         move || connectivity::update_nodes_connectivity_task(db.clone())
-    })); // ahh, much better! a generic periodic task spawner.
+    }));
 
     // start an axum server, so we can query the local database from outside.
     let listener = TcpListener::bind("0.0.0.0:3123").await?;

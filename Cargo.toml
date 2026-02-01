@@ -1,5 +1,5 @@
 [package]
-name = "bipa_backend_challenge"
+name = "backend_challenge"
 version = "0.1.0"
 edition = "2024"
 

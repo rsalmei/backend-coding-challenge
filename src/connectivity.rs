@@ -44,29 +44,10 @@ impl From<MempoolNodeConnectivity> for NodeConnectivity {
 /// Updates the local database with the latest connectivity data of Lightning Network nodes.
 pub async fn update_nodes_connectivity_task(db: Surreal<Any>) -> Result<()> {
     let nodes = fetch_nodes_connectivity().await?;
+    info!("fetched new nodes connectivity data, len: {}", nodes.len());
     if nodes.is_empty() {
         anyhow::bail!("fetched zero nodes connectivity data from API");
     }
-
-    // yes, I do use unwrap in production code, but very consciously. I even always comment why it's
-    // safe to do so like it was an unsafe block. This reassures code reviewers and future me that
-    // it's not an oversight but a deliberate choice, that has been thought through and is
-    // guaranteed to be safe. I do this for any functions that may panic, like unwraps, arrays
-    // indexing, Vec::swap_remove, etc.
-
-    // I consider panics to be embarrassing, so no software of mine will ever panic, at most they
-    // will gracefully shut down or degrade functionality.
-    // I also use unwraps a lot at compile time, like for LazyLock initializers with Regexes using
-    // fixed patterns, that must be correct or are a programming error that can only be fixed by the
-    // developer (me :-). But I wouldn't ever use any of those in runtime code, that depends on the
-    // environment or user input. It seems easy to discern between the two at first, but it requires
-    // a good deal of experience to always get it right.
-
-    // also notice that this field is being used here only for logging purposes, it won't even be
-    // returned by the API; but I consider very important to store updated_at in the database for a
-    // plethora of reasons, like debugging, data staleness checks, auditing, etc.
-    let max_updated_at = nodes.iter().map(|node| node.updated_at).max().unwrap(); // SAFETY: nodes is not empty.
-    info!("fetched new nodes connectivity data, max_updated_at: {max_updated_at}");
 
     // upsert each node's connectivity data into the database.
     // this is necessary because they are ranked by connectivity quality (number of open channels),
